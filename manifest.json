@@ -1,0 +1,23 @@
+{
+	"manifest_version": 2,
+	"name": "rescueTab",
+	"permissions": [ "tabs", "unlimitedStorage", "chrome://favicon/", "http://*/*", "https://*/*" ],
+	"version": "0.0.1",
+	"background": {
+		"page": "background.html"
+	},
+	"browser_action": {
+		"default_icon": {
+			"19": "icon/icon-19.png",
+			"38": "icon/icon-38.png"
+		},
+		"default_popup": "popup.html",
+		"default_title": "Tab History"
+	},
+	"description": "Rescue your accidentally closed tabs from the murky depths of tab limbo!",
+	"icons": {
+		"128": "icon/icon-128.png",
+		"16": "icon/icon-16.png",
+		"48": "icon/icon.png"
+	}
+}

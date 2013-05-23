@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="utf-8" />
+		<link rel="stylesheet" href="css/popup.css" />
+		<script src="js/popup.js"></script>
+		<script src="js/init.js"></script>
+	</head>
+	<body>
+		<div id="menu">
+			<div id="search_wrapper">
+				<input type="search" id="search" placeholder="Search" autofocus />
+			</div>
+			<button id="open">Open</button>
+			<button id="delete">Delete</button>
+			<button id="opts">Options</button>
+			<a class="nav" id="prev" href="#">&lsaquo;</a>
+			<a class="nav" id="next" href="#">&rsaquo;</a>
+		</div>
+		<div id="recentlyClosed">
+			<h2>Recently Closed Tabs</h2>
+			<div class="tabContainer" id="closedTabs"></div>
+			<div class="messages">
+				<p class="empty">Open and then close a tab to begin</p>
+				<p class="noresults">No Results</p>
+			</div>
+		</div>
+		<div id="options" class="overlay">
+			<!-- <h1>Tabby Options</h1> -->
+			<div class="cardContainer">
+				<div class="card">
+					<label for="showBadge">Enable badge</label>
+					<input type="checkbox" id="showBadge" />
+				</div>
+				<div class="card">
+					<label for="saveHistory">Preserve history</label>
+					<input type="checkbox" id="saveHistory" />
+				</div>
+				<div class="card">
+					<label for="tabLimit">Tab limit</label>
+					<span id="tabLimit-value" class="sliderVal"></span>
+					<input type="range" min="50" max="600" step="1" value="" id="tabLimit" />
+				</div>
+				<div class="card">
+					<label for="tabsPerPage">Tabs per page</label>
+					<span id="tabsPerPage-value" class="sliderVal"></span>
+					<input type="range" min="3" max="250" step="1" value="" id="tabsPerPage" />
+				</div>
+			</div>
+			<div class="cardContainer">
+				<div class="actions card">
+					<button id="clear">Clear History</button>
+					<button id="save">Save</button>
+				</div>
+			</div>
+		</div>
+	</body>
+</html>
