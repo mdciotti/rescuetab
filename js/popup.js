@@ -2,15 +2,16 @@
 var settings = chrome.extension.getBackgroundPage().settings,
 	currentPage = 0,
 	keyPressTimer,
-	filterRegEx,
-	allLoaded = false;
+	filterRegEx;
 
-var TabList = function () {
-	this.tabs = [];
+var TabList = function (container) {
+	this.tabs = {};
+	this.container = container;
+	return this;
 };
 
 TabList.prototype.add = function (uid, tab) {
-	this.tabs.push(tab);
+	this.tabs["Tab-" + uid] = tab;
 	this.render();
 	return this;
 };
@@ -20,11 +21,11 @@ TabList.prototype.getTab = function (uid) {
 TabList.prototype.populate = function (begin, amount) {
 	this.enumerate(function (uid) {
 		this.add(uid, this.getTab(uid));
-	});
+	}, begin, amount);
 	return this;
 };
 TabList.prototype.find = function (search) {
-	var matches = [];
+	var matches = {};
 
 	this.enumerate(function (uid) {
 		var tab = this.getTab(uid);
@@ -32,7 +33,7 @@ TabList.prototype.find = function (search) {
 			if (search.hasOwnProperty(key)) {
 				if (tab.hasOwnProperty(key)) {
 					if (tab[key] === search[key]) {
-						matches.push(tab);
+						matches["Tab-" + uid] = tab;
 						break;
 					}
 				}
@@ -42,53 +43,80 @@ TabList.prototype.find = function (search) {
 	return matches;
 };
 TabList.prototype.remove = function (tabId) {
-	this.tabs.splice()
+	delete this.tabs["Tab-" + tabId];
 	return this;
 };
 TabList.prototype.clear = function () {
-	this.enumerate(this.remove);
+	this.tabs = {};
 	return this;
 };
-TabList.prototype.enumerate = function (callback) {
-	var min_limit = parseInt(localStorage["minimumTabInc"]);
+TabList.prototype.enumerate = function (callback, min_limit, amount) {
+	var min_limit = typeof min_limit == "undefined" ? parseInt(localStorage["minimumTabInc"]) : min_limit;
 	var max_limit = parseInt(localStorage["uidCounter"]);
 
-	for (var uid = max_limit - 1; uid >= min_limit; uid--) {
+	for (var uid = max_limit - 1, n = 0; uid >= min_limit && n < amount; uid--, n++) {
 		if (localStorage.hasOwnProperty("ClosedTab-" + uid)) {
 			callback.call(this, uid);
 		}
 	}
 	return this;
 };
-TabList.prototype.render = function (tabs) {
+TabList.prototype.render = function (tabs, page) {
 	tabs = tabs || this.tabs;
+	page = typeof page == "undefined" ? 0 : page;
 
-	var frag = document.createDocumentFragment();
-	
-	for (var i = 0, l = tabs.length; i < l; i++) {
-		var tab = getClosedTab(id);
+	var count = parseInt(localStorage["closedTabCount"]);
+	var tabContainer = this.container;
 
-		var link = document.createElement('a');
-		link.href = "#";
-		link.title = url;
-		link.addEventListener('click', item_click, false);
-
-		var img = new Image();
-		img.src = "chrome://favicon/" + tab.url;
-		img.width = "16";
-		img.height = "16";
-
-		var linkTitle = document.createElement("span");
-		linkTitle.className = "linkTitle";
-		linkTitle.innerHTML = tab.title;
-
-		var timeAgo = document.createElement("span");
-		timeAgo.className = "timeAgo";
-		timeAgo.innerText = makeTimeAgoText(tab.timestamp);
+	// Clear list
+	while (tabContainer.firstChild) {
+		tabContainer.removeChild(tabContainer.firstChild);
 	}
 
-	var tabContainer = document.querySelector("#recentlyClosed .tabContainer");
+	var frag = document.createDocumentFragment();
+
+	for (key in tabs) {
+		if (tabs.hasOwnProperty(key)) {
+
+			var tab = tabs[key];
+
+			var link = document.createElement('a');
+			link.href = "#";
+			link.title = tab.url;
+			link.addEventListener('click', item_click, false);
+
+			var img = new Image();
+			img.src = "chrome://favicon/" + tab.url;
+			img.width = "16";
+			img.height = "16";
+
+			var linkTitle = document.createElement("span");
+			linkTitle.className = "linkTitle";
+			linkTitle.innerHTML = tab.title;
+
+			var timeAgo = document.createElement("span");
+			timeAgo.className = "timeAgo";
+			timeAgo.innerText = makeTimeAgoText(tab.timestamp);
+
+			link.appendChild(img);
+			link.appendChild(linkTitle);
+			link.appendChild(timeAgo);
+			frag.appendChild(link);
+		}
+	}
+
 	tabContainer.appendChild(frag);
+
+	return this;
+};
+TabList.prototype.search = function (str) {
+	str = str.replace(/^\s\s*/, '').replace(/\s\s*$/, '');
+	str = stripVowelAccent(str);
+
+	if (str.length == 0) this.render(null, 0);
+	else this.render(this.find(str.toLowerCase().split(" ")), 0);
+
+	return this;
 };
 
 function makeTimeAgoText(timestamp) {
@@ -117,9 +145,50 @@ function makeTimeAgoText(timestamp) {
 	return timeTextz;
 }
 
+// Throttle function from underscore.js
+function throttle(func, wait) {
+	var context, args, timeout, result;
+	var previous = 0;
+	var later = function () {
+		previous = new Date;
+		timeout = null;
+		result = func.apply(context, args);
+	};
+	return function () {
+		var now = new Date;
+		var remaining = wait - (now - previous);
+		context = this;
+		args = arguments;
+		if (remaining <= 0) {
+			clearTimeout(timeout);
+			timeout = null;
+			previous = now;
+			result = func.apply(context, args);
+		} else if (!timeout) {
+			timeout = setTimeout(later, remaining);
+		}
+		return result;
+	};
+}
+
 window.addEventListener('load', function () {
 
-	loadText();
+	// loadText();
+	var tabContainer = document.querySelector("#recentlyClosed .tabContainer");
+
+	tabList = new TabList(tabContainer);
+	tabList.populate(0, 20);
+	tabList.render();
+
+	tabContainer.addEventListener('scroll', throttle(function () {
+		var bottom = tabContainer.scrollTop + tabContainer.offsetHeight;
+		console.log(bottom, tabContainer.scrollHeight);
+		if (bottom >= tabContainer.scrollHeight - 32) {
+			// tabList.clear();
+			console.log("Loading...");
+			tabList.populate(tabList.tabs.length, 10).render();;
+		}
+	}, 100), false);
 
 	document.getElementById("delete").addEventListener("click", deleteTabs, false);
 	document.getElementById("open").addEventListener("click", openTabs, false);
@@ -141,65 +210,70 @@ window.addEventListener('load', function () {
 		searchFor(this.value);
 	}, false);
 
-	options_init();
+	// Options
+	// document.getElementById("save").addEventListener("click", options_save, false);
+	document.getElementById("clear").addEventListener("click", resetData, false);
+
+	document.getElementById('tabLimit').addEventListener('change', function (event) {
+		var curve = 5 + Math.floor((Math.pow(event.target.value, 5) / Math.pow(600, 5)) * 99994);
+		document.getElementById('tabLimit-value').textContent = curve.toString();
+		settings.tabLimit = curve;
+		store_settings();
+	}, false);
+
+	document.getElementById('tabsPerPage').addEventListener('change', function (event) {
+		document.getElementById('tabsPerPage-value').textContent = event.target.value;
+		store_settings();
+	}, false);
+	document.getElementById('showBadge').addEventListener('change', function (event) {
+		settings.showBadge = this.checked;
+		setBadgeText();
+		store_settings();
+	});
+	document.getElementById('saveHistory').addEventListener('change', function (event) {
+		settings.saveHistory = this.checked;
+		store_settings();
+	});
+	document.getElementById('tabsPerPage').addEventListener('change', function (event) {
+		settings.tabsPerPage = parseInt(document.getElementById("tabsPerPage").value);
+		store_settings();
+	});
+
+	options_loadState();
 
 }, false);
 
 function showOptions() {
+	options_loadState();
 	setState(document.getElementById("options"), "visible", true);
 }
 function hideOptions() {
 	setState(document.getElementById("options"), "visible", false);
 }
-function options_init() {
 
-	document.getElementById("save").addEventListener("click", options_save, false);
-	document.getElementById("clear").addEventListener("click", resetData, false);
-
-	settings = chrome.extension.getBackgroundPage().settings;
+function options_loadState() {
+	document.getElementById("showBadge").checked = settings.showBadge;
+	document.getElementById("saveHistory").checked = settings.saveHistory;
 
 	var limitValue = document.getElementById('tabLimit-value');
-	document.getElementById('tabLimit').value = NaN;
+	// document.getElementById('tabLimit').value = NaN;
 	limitValue.textContent = settings.tabLimit;
-	document.getElementById('tabLimit').addEventListener('change', function (event) {
-		limitValue.textContent = 5 + Math.floor((Math.pow(event.target.value, 5) / Math.pow(600, 5)) * 99994);
-	}, false);
 
 	var tabsPerPage = document.getElementById('tabsPerPage-value');
 	document.getElementById('tabsPerPage').value = tabsPerPage.textContent = settings.tabsPerPage;
-	document.getElementById('tabsPerPage').addEventListener('change', function (event) {
-		tabsPerPage.textContent = event.target.value;
-	}, false);
-
-	document.getElementById("showBadge").checked = settings.showBadge;
-
-	document.getElementById("saveHistory").checked = settings.saveHistory;
-	allLoaded = true;
 }
 
-function options_save() {
-	if (!allLoaded) return;
-
-	settings.showBadge = document.getElementById("showBadge").checked;
-	settings.saveHistory = document.getElementById("saveHistory").checked;
-
-	settings.tabLimit = parseInt(document.getElementById('tabLimit-value').textContent);
-	settings.tabsPerPage = parseInt(document.getElementById("tabsPerPage").value);
-
-	if (settings.badgeHide == true) chrome.browserAction.setBadgeText({text:""});
-
+function store_settings() {
 	localStorage["settings"] = JSON.stringify(settings);
-	localStorage["minimumTabInc"] = 0; //reset this shit, or else some bad stuff can happen
+	localStorage["minimumTabInc"] = 0;
 	chrome.extension.getBackgroundPage().settings = settings;
-
-	hideOptions();
 }
 
-function trigger(element, eventType) {
-	event = document.createEvent("HTMLEvents");
-	event.initEvent(eventType, true, true);
-	element.dispatchEvent(event)
-}
+// function trigger(element, eventType) {
+// 	event = document.createEvent("HTMLEvents");
+// 	event.initEvent(eventType, true, true);
+// 	element.dispatchEvent(event)
+// }
 
 function item_click(e) {
 	if (e.button == 1) {
@@ -296,29 +370,12 @@ function displayPopup(filterStrings) {
 	}
 }
 
-// function checkBox_click(e) {
-// 	e.stopPropagation();
-
-// 	var anyChecked = false;
-// 	var items = document.getElementById("closedTabs").childNodes;
-// 	for (var j = 0, n = items.length - 1; j < n; j++) {
-// 		// console.log(items[j]);
-// 		anyChecked = anyChecked || items[j].childNodes[0].checked;
-// 	}
-// 	setState(document.getElementById("delete"), "visible", anyChecked);
-// 	setState(document.getElementById("open"), "visible", anyChecked);
-// }
-
 function displayTabEntry(id, filterStrings) {
 	filterStrings = filterStrings || [];
 
 	var tab = getClosedTab(id);
 
 	var text_link = createLink(id, tab.url);
-
-	// var checkBox = document.createElement("input");
-	// checkBox.type = "checkbox";
-	// checkBox.addEventListener("click", checkBox_click, false);
 
 	var img = new Image();
 	img.src = "chrome://favicon/" + tab.url;
@@ -336,7 +393,6 @@ function displayTabEntry(id, filterStrings) {
 	timeAgo.className = "timeAgo";
 	timeAgo.innerText = makeTimeAgoText(tab.timestamp);
 	
-	// text_link.appendChild(checkBox);
 	text_link.appendChild(img);
 	text_link.appendChild(linkTitle);
 	text_link.appendChild(timeAgo);
@@ -344,7 +400,7 @@ function displayTabEntry(id, filterStrings) {
 }
 
 function searchFor(string) {
-	string = string.replace(/(\%)/g, "%25");
+	// string = string.replace(/(\%)/g, "%25");
 	string = string.replace(/^\s\s*/, '').replace(/\s\s*$/, '');
 	string = stripVowelAccent(string);
 

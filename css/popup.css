@@ -243,29 +243,6 @@ input[type="range"]::-webkit-slider-thumb {
 	outline: none;
 	min-width: 100px;
 }
-.nav {
-	height: 32px;
-	display: block;
-	font-size: 32px;
-	line-height: 0.9;
-	padding: 4px 8px;
-	opacity: 0.25;
-	cursor: default;
-	outline: none;
-}
-.nav.visible {
-	opacity: 1;
-	cursor: pointer;
-	color: #666666;
-	text-decoration: none;
-}
-.nav.visible:hover, .nav:focus {
-	background: #DDDDDD;
-}
-.nav.visible:active {
-	background: #33CCFF;
-	color: #EEEEEE;
-}
 #menu button, #menu button:disabled {
 	-webkit-flex: 0 1 auto;
 	-webkit-appearance: none;
@@ -305,6 +282,29 @@ input[type="range"]::-webkit-slider-thumb {
 	display: block;
 	opacity: 1;
 	cursor: pointer;
+}
+#menu button.nav {
+	height: 32px;
+	display: block;
+	font-size: 32px;
+	line-height: 0;
+	padding: 4px 8px;
+	opacity: 0.25;
+	cursor: default;
+	text-decoration: none !important;
+}
+#menu button.nav.visible {
+	opacity: 1;
+	cursor: pointer;
+	color: #666666;
+	text-decoration: none;
+}
+#menu button.nav.visible:hover, #menu button.nav:focus {
+	background: #DDDDDD;
+}
+#menu button.nav.visible:active {
+	background: #33CCFF;
+	color: #EEEEEE;
 }
 
 h2 {
@@ -409,11 +409,11 @@ img {
 	-webkit-user-select: none;
 	cursor: default;
 }
-.tabContainer.empty + .messages .empty,
+.tabContainer:empty + .messages .empty,
 .tabContainer.noresults + .messages .noresults {
 	display: block;
 }
-.tabContainer.empty h2 {
+.tabContainer:empty h2 {
 	display: none;
 }
 
