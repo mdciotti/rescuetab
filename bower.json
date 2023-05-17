@@ -1,0 +1,25 @@
+{
+  "name": "rescuetab",
+  "version": "0.0.0",
+  "homepage": "https://github.com/mdciotti/rescuetab",
+  "authors": [
+    "Maxwell Ciotti <max@mdc.io>"
+  ],
+  "description": "Rescue your accidentally closed tabs from the murky depths of tab limbo!",
+  "main": "manifest.json",
+  "keywords": [
+    "tabs",
+    "chrome",
+    "extension",
+    "undo"
+  ],
+  "license": "MIT",
+  "private": true,
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "bower_components",
+    "test",
+    "tests"
+  ]
+}

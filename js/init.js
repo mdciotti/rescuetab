@@ -11,15 +11,6 @@ function escapeText(txt) {
 }
 
 function getClosedTab(id) {
-	// var parts = localStorage.getItem("ClosedTab-" + id).split("%%");
-	// return {
-	// 	id: parseInt(parts[0]),
-	// 	timestamp: parseInt(parts[1]),
-	// 	url: parts[2],
-	// 	index: parseInt(parts[3]),
-	// 	title: parts[4],
-	// 	something: parseInt(parts[5])
-	// };
 	return JSON.parse(localStorage.getItem("ClosedTab-" + id));
 }
 

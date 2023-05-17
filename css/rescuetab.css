@@ -1,0 +1,115 @@
+
+html {
+	width: 400px;
+	min-height: 200px;
+}
+
+body {
+	width: 400px;
+	margin: 0;
+	font: 12px "Helvetica Neue", sans-serif;
+	user-select: none;
+	overflow-x: hidden;
+	overflow-y: auto;
+	background-color: #EEEEEE;
+	line-height: 1;
+}
+
+:focus {
+	outline: none;
+}
+
+a:link, a:visited {
+	/*color: #33CCFF;*/
+	text-decoration: none;
+}
+
+#recently-closed {
+	display: flex;
+	flex-direction: column;
+	height: 400px;
+	width: 400px;
+}
+
+#recently-closed .list {
+	flex: 0 0 auto;
+	text-align: left;
+	overflow-x: hidden;
+	overflow-y: auto;
+}
+
+#recently-closed .tabs {
+	flex-basis: 60%;
+}
+
+#recently-closed .windows {
+	flex-basis: 40%;
+}
+
+.list .item {
+	display: block;
+	min-height: 24px;
+	box-sizing: border-box;
+	border-bottom: 1px solid #CCCCCC;
+	color: #333333;
+	text-decoration: none;
+	padding: 4px;
+	background: transparent;
+	display: flex;
+	transition: background 0.5s cubic-bezier(0.19, 1, 0.22, 1);
+}
+
+.list .item .favicon {
+	margin: 2px 0 2px 4px;
+	display: block;
+}
+
+.list .item:last-child {
+	border-bottom: none;
+}
+
+.list .item:hover, .list .item:focus {
+	outline: none;
+	background: #DDDDDD;
+	color: #444444;
+	transition: background 0s cubic-bezier(0.19, 1, 0.22, 1);
+}
+
+.list .item .item-title {
+	flex: 1 1 auto;
+	padding: 4px 8px;
+	min-height: 12px;
+	width: 290px;
+	/*display: inline-block;*/
+	/*width: 270px;*/
+	/*min-height: 11px;*/
+	/*margin: 3px 0 3px 0;*/
+	overflow: hidden;
+	text-overflow: ellipsis;
+    /*line-height: 120%;*/
+}
+
+.list .item .time-ago {
+	min-height: 12px;
+	color: #999999;
+	display: block;
+	padding: 4px 8px;
+	width: 50px;
+	text-align: right;
+}
+
+.messages p {
+	padding: 16px;
+	margin: 0;
+	display: none;
+	text-align: center;
+	color: #999999;
+	font-size: 16px;
+	font-weight: 200;
+	user-select: none;
+	cursor: default;
+}
+
+.list:empty + .messages .empty {
+	display: block;
+}
